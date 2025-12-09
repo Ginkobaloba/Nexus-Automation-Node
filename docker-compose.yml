@@ -1,0 +1,116 @@
+services:
+  ####################################################################
+  # TRAEFIK — Reverse Proxy + Router
+  ####################################################################
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--api.dashboard=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.yml:/traefik.yml
+      - ./traefik/dynamic:/dynamic
+    networks:
+      - nexus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.projectnexuscode.org`)"
+      - "traefik.http.routers.traefik.entrypoints=web,websecure"
+      - "traefik.http.routers.traefik.service=api@internal"
+    restart: unless-stopped
+
+
+  ####################################################################
+  # CLOUDFLARED — Cloudflare Tunnel
+  ####################################################################
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: >
+      tunnel --no-autoupdate run
+      --token ${CLOUDFLARED_TUNNEL_TOKEN}
+    networks:
+      - nexus
+    restart: unless-stopped
+
+
+  ####################################################################
+  # N8N — Automation Engine
+  ####################################################################
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    environment:
+      # Timezones
+      - GENERIC_TIMEZONE=US/Central
+      - TZ=US/Central
+
+      # n8n Settings
+      - N8N_HOST=n8n.projectnexuscode.org
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.projectnexuscode.org/
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+
+      # External API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      # Google OAuth2 Env Vars
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
+      - GOOGLE_OAUTH_REDIRECT=${GOOGLE_OAUTH_REDIRECT}
+
+      - N8N_CREDENTIALS_OVERWRITE_DATA={
+          "gmail_main":{
+            "clientId":"${GOOGLE_OAUTH_CLIENT_ID}",
+            "clientSecret":"${GOOGLE_OAUTH_CLIENT_SECRET}",
+            "redirectUri":"${GOOGLE_OAUTH_REDIRECT}",
+            "scopes":[        
+              "https://www.googleapis.com/auth/gmail",
+              "https://www.googleapis.com/auth/drive",
+              "https://www.googleapis.com/auth/spreadsheets",
+              "https://www.googleapis.com/auth/documents"
+            ]
+          },
+          "gmail_alerts":{
+            "clientId":"${GOOGLE_OAUTH_CLIENT_ID}",
+            "clientSecret":"${GOOGLE_OAUTH_CLIENT_SECRET}",
+            "redirectUri":"${GOOGLE_OAUTH_REDIRECT}",
+            "scopes":[
+              "https://www.googleapis.com/auth/gmail"
+            ]
+          }
+        }      
+      - NEXUS_LABELS={"urgent":"URGENT","financial":"FINANCES","legal":"LEGAL","personal":"PERSONAL","kids":"KIDS","project":"PROJECT_NEXUS","junk":"JUNK"}
+
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - nexus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`n8n.projectnexuscode.org`)"
+      - "traefik.http.routers.n8n.entrypoints=web,websecure"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+    restart: unless-stopped
+
+
+####################################################################
+# VOLUMES & NETWORKS
+####################################################################
+volumes:
+  n8n_data:
+
+networks:
+  nexus:
+    driver: bridge
