@@ -116,8 +116,8 @@
         "meta":             { "type": "object",  "description": "{ models: string[], duration_ms: number }" }
       },
       "tags": ["llm", "council", "multi-model", "deliberation", "claude", "gemini", "gpt"],
-      "models": ["claude-3-5-sonnet-20241022", "gemini-2.0-flash", "gpt-4o"],
-      "nodeCount": 26
+      "models": ["claude-3-haiku-20240307", "gemini-2.0-flash", "gpt-4o-mini"],
+      "nodeCount": 28
     }
   }
 }
