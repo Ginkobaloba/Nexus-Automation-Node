@@ -53,16 +53,23 @@ services:
       - GENERIC_TIMEZONE=US/Central
       - TZ=US/Central
 
-      # n8n Settings
+      # n8n Core Settings
       - N8N_HOST=n8n.projectnexuscode.org
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - WEBHOOK_URL=https://n8n.projectnexuscode.org/
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - N8N_RUNNERS_ENABLED=true
+      # Allow Code nodes to read env vars (required for workflow-registry lookups)
+      - N8n_BLOCK_ENV_ACCESS_IN_NODE=false
 
-      # External API Keys
+      # External API Keys (sourced from .env)
+      # OpenAI — used by Email workflows + LLM.Council (GPT-4o)
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Anthropic — used by LLM.Council (Claude 3.5 Sonnet)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # Google Gemini — used by LLM.Council (Gemini 2.0 Flash)
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
 
       # Google OAuth2 Env Vars
       - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}

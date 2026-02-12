@@ -29,6 +29,12 @@ Thumbs.db
 .vscode/
 .idea/
 
+# MCP config (contains API keys)
+.mcp.json
+
+# Claude Code local settings (machine-specific permissions)
+.claude/
+
 # Docker
 docker-data/
 *.pid

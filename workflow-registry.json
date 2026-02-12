@@ -1,0 +1,123 @@
+{
+  "version": "1.0",
+  "workflows": {
+    "Email.Send": {
+      "n8nId": "0G0Ka32a3mYhQhOa",
+      "description": "Send an email via Gmail",
+      "input": {
+        "to":      { "type": "string",  "required": true,  "description": "Recipient email address(es), comma-separated" },
+        "subject": { "type": "string",  "required": true,  "description": "Email subject line" },
+        "body":    { "type": "string",  "required": true,  "description": "Email body (plain text or HTML)" },
+        "cc":      { "type": "string",  "required": false, "description": "CC recipients, comma-separated" },
+        "bcc":     { "type": "string",  "required": false, "description": "BCC recipients, comma-separated" }
+      },
+      "output": {
+        "messageId": { "type": "string", "description": "Gmail message ID" },
+        "threadId":  { "type": "string", "description": "Gmail thread ID" },
+        "status":    { "type": "string", "enum": ["sent", "error"], "description": "Result status" }
+      },
+      "tags": ["email", "gmail", "send"],
+      "credentialRef": "gmail_main"
+    },
+    "Email.Get": {
+      "n8nId": "GxrpXyYs4TmWtCXQ",
+      "description": "Get a single email by message ID",
+      "input": {
+        "messageId": { "type": "string", "required": true, "description": "Gmail message ID to retrieve" }
+      },
+      "output": {
+        "messageId": { "type": "string", "description": "Gmail message ID" },
+        "threadId":  { "type": "string", "description": "Gmail thread ID" },
+        "from":      { "type": "string", "description": "Sender email address" },
+        "to":        { "type": "string", "description": "Recipient email address(es)" },
+        "subject":   { "type": "string", "description": "Email subject line" },
+        "body":      { "type": "string", "description": "Email body text" },
+        "date":      { "type": "string", "description": "Email date (ISO 8601)" },
+        "labels":    { "type": "array",  "description": "Array of label IDs on this message" }
+      },
+      "tags": ["email", "gmail", "get", "read"],
+      "credentialRef": "gmail_main"
+    },
+    "Email.List": {
+      "n8nId": "90vLGzH19vJNqVc1",
+      "description": "List recent emails from Gmail inbox",
+      "input": {
+        "limit":    { "type": "number", "required": false, "description": "Max emails to return (default 10, max 50)" },
+        "labelIds": { "type": "string", "required": false, "description": "Filter by label ID (e.g. INBOX, UNREAD)" },
+        "query":    { "type": "string", "required": false, "description": "Gmail search query (e.g. 'is:unread')" }
+      },
+      "output": {
+        "messages": { "type": "array", "description": "Array of {messageId, from, subject, snippet, date}" }
+      },
+      "tags": ["email", "gmail", "list", "inbox"],
+      "credentialRef": "gmail_main"
+    },
+    "Email.Search": {
+      "n8nId": "1RQlpK2HU3Cu4qKC",
+      "description": "Search emails using Gmail query syntax",
+      "input": {
+        "query": { "type": "string", "required": true,  "description": "Gmail search query (e.g. 'from:user@example.com subject:invoice')" },
+        "limit": { "type": "number", "required": false, "description": "Max results to return (default 10, max 50)" }
+      },
+      "output": {
+        "messages": { "type": "array", "description": "Array of {messageId, from, subject, snippet, date}" }
+      },
+      "tags": ["email", "gmail", "search", "query"],
+      "credentialRef": "gmail_main"
+    },
+    "Email.Label": {
+      "n8nId": "oBbkedhulUupMiNU",
+      "description": "Add or remove labels on a Gmail message",
+      "input": {
+        "messageId":    { "type": "string", "required": true,  "description": "Gmail message ID to modify" },
+        "addLabels":    { "type": "array",  "required": false, "description": "Label IDs to add (e.g. ['STARRED', 'IMPORTANT'])" },
+        "removeLabels": { "type": "array",  "required": false, "description": "Label IDs to remove (e.g. ['UNREAD'])" }
+      },
+      "output": {
+        "messageId":     { "type": "string", "description": "Gmail message ID" },
+        "currentLabels": { "type": "array",  "description": "Labels currently on the message after modification" },
+        "status":        { "type": "string", "enum": ["updated", "error"], "description": "Result status" }
+      },
+      "tags": ["email", "gmail", "label", "organize"],
+      "credentialRef": "gmail_main"
+    },
+    "Email.Reply": {
+      "n8nId": "OMahM1prJ6QecQ2Y",
+      "description": "Reply to an existing email thread",
+      "input": {
+        "messageId": { "type": "string", "required": true,  "description": "Gmail message ID to reply to" },
+        "body":      { "type": "string", "required": true,  "description": "Reply body (plain text or HTML)" }
+      },
+      "output": {
+        "newMessageId": { "type": "string", "description": "New reply message ID" },
+        "threadId":     { "type": "string", "description": "Gmail thread ID" },
+        "status":       { "type": "string", "enum": ["sent", "error"], "description": "Result status" }
+      },
+      "tags": ["email", "gmail", "reply", "respond"],
+      "credentialRef": "gmail_main"
+    },
+    "LLM.Council": {
+      "n8nId": "13Bg7qtxJYvsFscJ",
+      "description": "Multi-model deliberation: Claude + Gemini + GPT reason together, vote, and synthesize consensus via a 2-round structured debate",
+      "input": {
+        "question": { "type": "string", "required": true, "description": "The question or prompt for the Council to deliberate on" }
+      },
+      "output": {
+        "question":         { "type": "string",  "description": "Original question passed in" },
+        "final_answer":     { "type": "string",  "description": "Synthesized consensus answer from the majority" },
+        "consensus":        { "type": "string",  "enum": ["unanimous", "majority", "split"], "description": "How much agreement was reached" },
+        "vote_tally":       { "type": "object",  "description": "Vote counts per option, e.g. {yes: 2, no: 1}" },
+        "confidence":       { "type": "number",  "description": "Domain-fit-weighted confidence of agreeing models (0–1)" },
+        "rounds_completed": { "type": "number",  "description": "1 if R2 was skipped (unanimous + low variance), 2 if peer review ran" },
+        "questions_for_user": { "type": "array", "description": "Aggregated clarifying questions for the user across all models" },
+        "action_items":     { "type": "array",   "description": "Merged, deduplicated action items from all models" },
+        "dissent":          { "type": "object",  "description": "Outvoted model's identity and dissent note (null if unanimous)" },
+        "deliberation":     { "type": "array",   "description": "Full R1 (and R2 if run) response objects from all models" },
+        "meta":             { "type": "object",  "description": "{ models: string[], duration_ms: number }" }
+      },
+      "tags": ["llm", "council", "multi-model", "deliberation", "claude", "gemini", "gpt"],
+      "models": ["claude-3-5-sonnet-20241022", "gemini-2.0-flash", "gpt-4o"],
+      "nodeCount": 26
+    }
+  }
+}
