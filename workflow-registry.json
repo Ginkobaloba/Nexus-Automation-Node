@@ -96,6 +96,20 @@
       "tags": ["email", "gmail", "reply", "respond"],
       "credentialRef": "gmail_main"
     },
+    "Email.Sort": {
+      "n8nId": "E9fL6eEwZGZg6RNB",
+      "description": "Classify unread inbox emails using local Qwen3 LLM and apply NEXUS_LABELS",
+      "input": {},
+      "output": {
+        "status":       { "type": "string", "description": "ok" },
+        "sorted_count": { "type": "number", "description": "Number of emails sorted" },
+        "sorted":       { "type": "array",  "description": "Array of {messageId, subject, label}" }
+      },
+      "triggers": ["schedule (every 15 min)", "webhook POST /webhook/email-sort"],
+      "tags": ["email", "gmail", "sort", "classify", "llm", "qwen"],
+      "credentialRef": "gmail_main",
+      "llm": { "model": "Qwen3-4B-noFP", "endpoint": "http://192.168.1.251:8000", "purpose": "classification" }
+    },
     "LLM.Council": {
       "n8nId": "13Bg7qtxJYvsFscJ",
       "description": "Multi-model deliberation: Claude + Gemini + GPT reason together, vote, and synthesize consensus via a 2-round structured debate",
