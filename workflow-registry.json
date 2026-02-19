@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "schemaVersion": 2,
-  "lastUpdated": "2026-02-19T15:30:00Z",
+  "lastUpdated": "2026-02-19T18:00:00Z",
   "nodeWhitelist": [
     "n8n-nodes-base.executeWorkflowTrigger",
     "n8n-nodes-base.set",
@@ -217,6 +217,62 @@
       "usageCount": 0,
       "lastVerified": "2026-02-19T00:00:00Z",
       "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Nexus.CortexTask": {
+      "n8nId": "KfPUpjvBoWlER4jX",
+      "description": "Delegate any generation task (code, plan, design, analyze) to Cortex (4090 local LLM)",
+      "semanticDescription": "Routes a task prompt to the Cortex LLM (Qwen3-Coder-30B-A3B W4A16 running on the 4090) with a task-type-specific system prompt and returns the generated content. Supports taskType values: 'code' (outputs raw JavaScript for n8n Code nodes), 'plan' (outputs structured implementation plan), 'design' (outputs workflow JSON), 'analyze' (outputs engineering analysis), 'general' (generic assistant). Use this to delegate expensive generation work from Claude to a free local model, reducing API costs. Returns { status, result, taskType, model, tokens_used }.",
+      "input": {
+        "task":     { "type": "string", "required": true,  "description": "The task or prompt to send to Cortex" },
+        "taskType": { "type": "string", "required": true,  "description": "One of: code | plan | design | analyze | general" },
+        "context":  { "type": "string", "required": false, "description": "Optional additional context to prepend to the task" }
+      },
+      "output": {
+        "status":      { "type": "string", "enum": ["success", "error"], "description": "Result status" },
+        "result":      { "type": "string", "description": "The generated content from Cortex" },
+        "taskType":    { "type": "string", "description": "The taskType that was used" },
+        "model":       { "type": "string", "description": "Model name returned by Cortex" },
+        "tokens_used": { "type": "number", "description": "Total tokens consumed" },
+        "error":       { "type": "string", "description": "Error message if status is error" }
+      },
+      "tags": ["nexus", "cortex", "llm", "local", "generation", "code", "plan"],
+      "llm": { "model": "Qwen3-Coder-30B-A3B W4A16", "endpoint": "http://192.168.1.140:8001", "purpose": "task delegation" },
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": [],
+      "allowedCallers": "internal"
+    },
+    "Nexus.Orchestrator": {
+      "n8nId": "jnQW89CKNgFiQzgO",
+      "description": "Routes natural language requests to the correct workflow or builds a new one via Nexus.Builder",
+      "semanticDescription": "The central routing brain for Project Nexus. Accepts a natural language request, loads the active workflow registry, sends both to Cortex for intent parsing, then either executes the matched workflow (EXECUTE path) or delegates to Nexus.Builder to create a new one (BUILD path). Dangerous operations (Calendar.Delete) require autoConfirm=true to proceed. Returns { status, action, workflowName, result } or { status: 'blocked', message }. This workflow enables all future Claude sessions to call local LLMs instead of generating code themselves, dramatically reducing API costs.",
+      "input": {
+        "request":     { "type": "string",  "required": true,  "description": "Natural language description of what to do" },
+        "autoConfirm": { "type": "boolean", "required": false, "description": "Set true to allow dangerous operations without blocking (default false)" }
+      },
+      "output": {
+        "status":       { "type": "string", "enum": ["success", "blocked"], "description": "Result status" },
+        "action":       { "type": "string", "enum": ["EXECUTE", "BUILD", "BLOCKED"], "description": "What the orchestrator did" },
+        "workflowName": { "type": "string", "description": "Workflow that was matched or built" },
+        "result":       { "type": "object", "description": "Output from executed sub-workflow (EXECUTE path only)" },
+        "n8nId":        { "type": "string", "description": "n8n ID of newly built workflow (BUILD path only)" },
+        "message":      { "type": "string", "description": "Block reason (BLOCKED path only)" }
+      },
+      "tags": ["nexus", "orchestrator", "routing", "meta", "cortex", "dispatch"],
+      "llm": { "model": "Qwen3-Coder-30B-A3B W4A16", "endpoint": "http://192.168.1.140:8001", "purpose": "intent routing" },
+      "nodeCount": 14,
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": ["Nexus.Builder"],
       "allowedCallers": "any"
     },
     "Nexus.Builder": {
