@@ -93,11 +93,12 @@ services:
             "clientId":"${GOOGLE_OAUTH_CLIENT_ID}",
             "clientSecret":"${GOOGLE_OAUTH_CLIENT_SECRET}",
             "redirectUri":"${GOOGLE_OAUTH_REDIRECT}",
-            "scopes":[        
+            "scopes":[
               "https://www.googleapis.com/auth/gmail",
               "https://www.googleapis.com/auth/drive",
               "https://www.googleapis.com/auth/spreadsheets",
-              "https://www.googleapis.com/auth/documents"
+              "https://www.googleapis.com/auth/documents",
+              "https://www.googleapis.com/auth/calendar"
             ]
           },
           "gmail_alerts":{
