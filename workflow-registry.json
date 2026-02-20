@@ -642,6 +642,287 @@
       "dependsOn": [],
       "allowedCallers": "any"
     },
+    "Drive.ListFiles": {
+      "n8nId": null,
+      "description": "List files and folders in Google Drive with optional search query",
+      "semanticDescription": "Searches Google Drive for files matching a query string (supports Drive search syntax: name contains 'report', mimeType='application/pdf', modifiedTime > '2026-01-01'). Returns file name, ID, MIME type, size, created/modified dates, and web view link. Use the file ID in Drive.GetFile to download content. Returns up to limit results (default 20).",
+      "input": {
+        "query":    { "type": "string", "required": false, "description": "Drive search query (e.g. \"name contains 'budget'\" or \"mimeType='application/pdf'\")" },
+        "limit":    { "type": "number", "required": false, "description": "Max files to return (default 20)" },
+        "folderId": { "type": "string", "required": false, "description": "Restrict search to files inside this folder ID (default: all Drive)" }
+      },
+      "output": {
+        "files": { "type": "array",  "description": "Array of { fileId, name, mimeType, size, createdTime, modifiedTime, webViewLink, parents }" },
+        "count": { "type": "number", "description": "Number of files returned" }
+      },
+      "tags": ["drive", "google-drive", "list", "search", "files"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Drive.GetFile": {
+      "n8nId": null,
+      "description": "Download a Google Drive file's content as text",
+      "semanticDescription": "Exports or downloads a Google Drive file and returns its text content. For Google Docs/Sheets/Slides, exports as plain text or CSV. For PDFs and other binary files, returns the raw content encoded as base64. Use Drive.ListFiles to get the fileId first. Best for reading text documents, CSVs, and exported Google Workspace files.",
+      "input": {
+        "fileId":   { "type": "string", "required": true,  "description": "Google Drive file ID" },
+        "mimeType": { "type": "string", "required": false, "description": "Export MIME type for Google Workspace files (default: text/plain for Docs, text/csv for Sheets)" }
+      },
+      "output": {
+        "fileId":      { "type": "string", "description": "File ID" },
+        "name":        { "type": "string", "description": "File name" },
+        "content":     { "type": "string", "description": "File content as text (or base64 for binary)" },
+        "mimeType":    { "type": "string", "description": "MIME type of the returned content" },
+        "sizeBytes":   { "type": "number", "description": "Content size in bytes" }
+      },
+      "tags": ["drive", "google-drive", "download", "read", "file"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Drive.CreateFolder": {
+      "n8nId": null,
+      "description": "Create a new folder in Google Drive",
+      "semanticDescription": "Creates a new folder in Google Drive, optionally nested inside an existing parent folder. Returns the new folder's ID (use this in Drive.UploadFile's folderId). If a folder with the same name exists, creates a second one — Drive allows duplicate folder names. Use Drive.ListFiles with a name query to check first if needed.",
+      "input": {
+        "name":     { "type": "string", "required": true,  "description": "Folder name to create" },
+        "parentId": { "type": "string", "required": false, "description": "Parent folder ID (default: My Drive root)" }
+      },
+      "output": {
+        "folderId":  { "type": "string", "description": "New folder ID" },
+        "name":      { "type": "string", "description": "Folder name" },
+        "webViewLink": { "type": "string", "description": "URL to open folder in Drive" }
+      },
+      "tags": ["drive", "google-drive", "folder", "create", "organize"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Sheets.Read": {
+      "n8nId": null,
+      "description": "Read rows from a Google Sheets spreadsheet",
+      "semanticDescription": "Reads rows from a specified sheet (tab) in a Google Sheets spreadsheet and returns them as an array of objects where keys are the header row values. Supports reading a specific range or all data. Use the spreadsheetId from the Sheets URL. Returns up to limit rows (default 100). Ideal for reading configuration data, logs, or any tabular data stored in Sheets.",
+      "input": {
+        "spreadsheetId": { "type": "string", "required": true,  "description": "Google Sheets spreadsheet ID (from URL)" },
+        "sheetName":     { "type": "string", "required": false, "description": "Sheet tab name (default: first sheet)" },
+        "range":         { "type": "string", "required": false, "description": "A1 notation range (default: all data, e.g. 'A1:Z100')" },
+        "limit":         { "type": "number", "required": false, "description": "Max rows to return (default 100)" }
+      },
+      "output": {
+        "rows":  { "type": "array",  "description": "Array of row objects with header keys" },
+        "count": { "type": "number", "description": "Number of rows returned" },
+        "headers": { "type": "array", "description": "Column header names from row 1" }
+      },
+      "tags": ["sheets", "google-sheets", "read", "spreadsheet", "data"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Sheets.AppendRow": {
+      "n8nId": null,
+      "description": "Append one or more rows to a Google Sheets spreadsheet",
+      "semanticDescription": "Appends data rows to the end of a Google Sheets spreadsheet sheet. Accepts an array of row objects (keys must match the header row) or a 2D array of raw values. Data is inserted after the last row with content — never overwrites existing data. Use this for logging, tracking, or accumulating records over time.",
+      "input": {
+        "spreadsheetId": { "type": "string", "required": true, "description": "Google Sheets spreadsheet ID" },
+        "sheetName":     { "type": "string", "required": false, "description": "Sheet tab name (default: first sheet)" },
+        "rows":          { "type": "array",  "required": true, "description": "Array of row objects to append (e.g. [{name: 'Alice', score: 95}])" }
+      },
+      "output": {
+        "updatedRange": { "type": "string", "description": "A1 notation of the range that was updated" },
+        "updatedRows":  { "type": "number", "description": "Number of rows appended" }
+      },
+      "tags": ["sheets", "google-sheets", "write", "append", "log"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Sheets.UpdateCell": {
+      "n8nId": null,
+      "description": "Write a value to a specific cell in a Google Sheets spreadsheet",
+      "semanticDescription": "Updates a single cell or small range in a Google Sheets spreadsheet using A1 notation. Use this for updating status fields, timestamps, counters, or any targeted cell update. For appending new records, use Sheets.AppendRow instead. For reading, use Sheets.Read.",
+      "input": {
+        "spreadsheetId": { "type": "string", "required": true, "description": "Google Sheets spreadsheet ID" },
+        "sheetName":     { "type": "string", "required": false, "description": "Sheet tab name (default: first sheet)" },
+        "range":         { "type": "string", "required": true, "description": "A1 notation of cell to update (e.g. 'B5' or 'A1:C1')" },
+        "value":         { "type": "string", "required": true, "description": "Value to write (string, number, or formula starting with =)" }
+      },
+      "output": {
+        "updatedRange": { "type": "string", "description": "A1 notation of updated range" },
+        "updatedCells": { "type": "number", "description": "Number of cells updated" }
+      },
+      "tags": ["sheets", "google-sheets", "write", "update", "cell"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Docs.Create": {
+      "n8nId": null,
+      "description": "Create a new Google Doc with optional initial content",
+      "semanticDescription": "Creates a new Google Document with a given title and optional initial body text. Returns the document ID and URL. The document is created in the authenticated user's Drive root by default. Use this to programmatically generate reports, notes, drafts, or any text document. For adding content to an existing document, use Docs.AppendText.",
+      "input": {
+        "title":    { "type": "string", "required": true,  "description": "Document title" },
+        "content":  { "type": "string", "required": false, "description": "Initial body text content (plain text)" },
+        "folderId": { "type": "string", "required": false, "description": "Drive folder ID to create the document in (default: Drive root)" }
+      },
+      "output": {
+        "documentId": { "type": "string", "description": "Google Docs document ID" },
+        "title":      { "type": "string", "description": "Document title" },
+        "url":        { "type": "string", "description": "URL to open the document in Google Docs" }
+      },
+      "tags": ["docs", "google-docs", "create", "document", "write"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Docs.Read": {
+      "n8nId": null,
+      "description": "Read the text content of a Google Doc",
+      "semanticDescription": "Exports a Google Docs document as plain text and returns its content. Use the documentId from the URL (the long string after /d/ and before /edit). Returns the full document text with paragraph breaks preserved. For structured data, consider Sheets.Read instead. This is ideal for reading meeting notes, reports, or any long-form text stored in Docs.",
+      "input": {
+        "documentId": { "type": "string", "required": true, "description": "Google Docs document ID" }
+      },
+      "output": {
+        "documentId": { "type": "string", "description": "Document ID" },
+        "title":      { "type": "string", "description": "Document title" },
+        "content":    { "type": "string", "description": "Full document text content" },
+        "wordCount":  { "type": "number", "description": "Approximate word count" }
+      },
+      "tags": ["docs", "google-docs", "read", "document", "text"],
+      "credentialRef": "gmail_main",
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "LLM.Summarize": {
+      "n8nId": null,
+      "description": "Summarize a long text using Brainstem (local 7B model, free)",
+      "semanticDescription": "Sends a text passage to the Brainstem LLM (Qwen3-4B running on the 4070 at 192.168.1.251:8000) for summarization. Returns a concise summary in the requested format. Use this for summarizing emails, documents, news articles, or any long-form text. Completely free — uses local GPU, no API cost. For complex reasoning or code tasks, use Nexus.CortexTask (30B model on 4090) instead.",
+      "input": {
+        "text":   { "type": "string", "required": true,  "description": "Text to summarize" },
+        "format": { "type": "string", "required": false, "description": "Output format: 'paragraph' (default), 'bullets', 'one-sentence'" },
+        "focus":  { "type": "string", "required": false, "description": "Optional focus instruction (e.g. 'focus on action items', 'focus on financial details')" }
+      },
+      "output": {
+        "summary":     { "type": "string", "description": "Summarized text" },
+        "model":       { "type": "string", "description": "Model used (brainstem)" },
+        "tokens_used": { "type": "number", "description": "Total tokens consumed" }
+      },
+      "tags": ["llm", "summarize", "brainstem", "local", "free", "text"],
+      "llm": { "model": "Qwen3-4B-noFP", "endpoint": "http://192.168.1.251:8000", "purpose": "summarization" },
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "LLM.Extract": {
+      "n8nId": null,
+      "description": "Extract structured data from unstructured text using Brainstem (local 7B model, free)",
+      "semanticDescription": "Sends text to Brainstem (Qwen3-4B on the 4070) and asks it to extract specific fields as JSON. Provide a schema describing what to extract (field name, type, description). Returns a structured JSON object. Use this to parse emails for dates/amounts/names, extract job requirements from postings, pull key facts from articles, or any NLP extraction task. Free — uses local GPU.",
+      "input": {
+        "text":   { "type": "string", "required": true, "description": "Text to extract from" },
+        "schema": { "type": "object", "required": true, "description": "Fields to extract: {fieldName: {type, description}} — e.g. {amount: {type:'number', description:'dollar amount'}, date: {type:'string', description:'date mentioned'}}" }
+      },
+      "output": {
+        "extracted":   { "type": "object", "description": "Extracted fields as JSON object matching the schema" },
+        "model":       { "type": "string", "description": "Model used" },
+        "tokens_used": { "type": "number", "description": "Total tokens consumed" }
+      },
+      "tags": ["llm", "extract", "parse", "brainstem", "local", "free", "nlp"],
+      "llm": { "model": "Qwen3-4B-noFP", "endpoint": "http://192.168.1.251:8000", "purpose": "extraction" },
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Web.Summarize": {
+      "n8nId": null,
+      "description": "Fetch a URL and summarize its content using Brainstem (free)",
+      "semanticDescription": "Combines Web.Fetch and LLM.Summarize: fetches a URL, strips HTML to clean text, then sends to Brainstem (Qwen3-4B on 4070) for summarization. Returns a concise summary of the page content. Ideal for reading and condensing news articles, blog posts, documentation pages, or any web content into a short actionable summary. Completely free — no API costs.",
+      "input": {
+        "url":    { "type": "string", "required": true,  "description": "URL to fetch and summarize" },
+        "format": { "type": "string", "required": false, "description": "Summary format: 'paragraph' (default), 'bullets', 'one-sentence'" },
+        "focus":  { "type": "string", "required": false, "description": "Optional focus instruction for the summary" }
+      },
+      "output": {
+        "url":     { "type": "string", "description": "URL that was fetched" },
+        "title":   { "type": "string", "description": "Page title" },
+        "summary": { "type": "string", "description": "Summarized content" },
+        "model":   { "type": "string", "description": "LLM model used for summarization" }
+      },
+      "tags": ["web", "summarize", "fetch", "brainstem", "local", "free", "research"],
+      "llm": { "model": "Qwen3-4B-noFP", "endpoint": "http://192.168.1.251:8000", "purpose": "summarization" },
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": ["Web.Fetch"],
+      "allowedCallers": "any"
+    },
     "Calendar.FindFreeSlot": {
       "n8nId": null,
       "description": "Find available time slots of a specified duration within a search window",
