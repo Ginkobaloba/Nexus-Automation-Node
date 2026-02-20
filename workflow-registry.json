@@ -2451,9 +2451,9 @@
       "complexity": "medium"
     },
     "Portfolio.ProcessRepo": {
-      "n8nId": null,
+      "n8nId": "GNouMiLPmyiqx79U",
       "description": "Fully improve a GitHub repository for portfolio use: write README, fix bugs, modernize code",
-      "semanticDescription": "Orchestrates a complete portfolio improvement pass over a single GitHub repository. First calls Portfolio.WriteREADME to generate professional documentation. Then fetches the repo file list, filters to significant source files (excluding binaries, build output, and dependencies), and calls Portfolio.ImproveFile on each file up to a configurable limit. Skips files already improved in this session. Returns a summary of all changes made.",
+      "semanticDescription": "Orchestrates a complete portfolio improvement pass over a single GitHub repository. Fetches the repo file list, writes a professional README via Cortex, then improves up to maxFiles source files (excluding binaries, build output, and dependencies). All GitHub API calls and Cortex LLM calls are made directly within the workflow. Returns a summary of all commits made. Callable as a sub-workflow via Execute Workflow node.",
       "input": {
         "repo": {
           "type": "string",
@@ -2502,16 +2502,13 @@
       ],
       "credentialRef": null,
       "dangerous": false,
-      "status": "inactive",
+      "status": "active",
       "version": 1,
       "createdBy": "claude-code",
       "nodeHash": null,
       "usageCount": 0,
-      "lastVerified": null,
-      "dependsOn": [
-        "Portfolio.WriteREADME",
-        "Portfolio.ImproveFile"
-      ],
+      "lastVerified": "2026-02-20T19:48:00Z",
+      "dependsOn": [],
       "allowedCallers": "any",
       "builderHints": {
         "skipPatterns": [
@@ -2616,7 +2613,7 @@
       "complexity": "medium"
     },
     "Portfolio.ProcessAll": {
-      "n8nId": null,
+      "n8nId": "1ExRMCbSI4K8lyEC",
       "description": "Webhook-triggered workflow that runs Portfolio.ProcessRepo on all configured GitHub repos in sequence",
       "semanticDescription": "Webhook-triggered (POST /webhook/portfolio-improve-all) entry point for the complete portfolio improvement pipeline. Iterates through a hardcoded list of all target repositories in order from oldest to newest: Draughts, LifeLink, ginkobaloba.github.io, Advent2019, KeywordParser, tic_tac_toe_touchstone_mattick, Checkers_Touchstone_Mattick, ABC_Fitness, ProjectNexus. For each repo, calls Portfolio.ProcessRepo sequentially with a 10-second pause between repos to avoid rate limiting. Returns a full summary of all changes made across all repos.",
       "input": {
@@ -2662,12 +2659,12 @@
       ],
       "credentialRef": null,
       "dangerous": false,
-      "status": "inactive",
+      "status": "active",
       "version": 1,
       "createdBy": "claude-code",
       "nodeHash": null,
       "usageCount": 0,
-      "lastVerified": null,
+      "lastVerified": "2026-02-20T19:48:00Z",
       "dependsOn": [
         "Portfolio.ProcessRepo"
       ],
