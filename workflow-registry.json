@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "schemaVersion": 2,
-  "lastUpdated": "2026-02-19T18:00:00Z",
+  "lastUpdated": "2026-02-19T21:00:00Z",
   "nodeWhitelist": [
     "n8n-nodes-base.executeWorkflowTrigger",
     "n8n-nodes-base.set",
@@ -304,6 +304,158 @@
       "lastVerified": null,
       "dependsOn": [],
       "allowedCallers": "internal"
+    },
+    "Nexus.SMS.Send": {
+      "n8nId": "zONyWOnfL7Gr3Qgy",
+      "description": "Send an SMS via email-to-carrier-gateway (no external API key required)",
+      "semanticDescription": "Converts a phone number to carrier gateway email addresses and sends the message via Gmail. When carrier is unknown, broadcasts to all major US carriers (T-Mobile, Verizon, AT&T, US Cellular, Google Fi, Cricket, Boost) and only the matching carrier delivers it as SMS. Limit 160 chars. Reliable for US numbers with no Twilio account needed.",
+      "input": {
+        "to":      { "type": "string", "required": true,  "description": "US phone number (digits only or formatted, e.g. 2625058898 or 262-505-8898)" },
+        "message": { "type": "string", "required": true,  "description": "SMS message text (max 160 chars)" },
+        "carrier": { "type": "string", "required": false, "description": "Carrier key to target one gateway: tmobile | verizon | att | uscellular | fi | cricket | boost (omit to broadcast all)" }
+      },
+      "output": {
+        "status":  { "type": "string", "description": "sent" },
+        "to":      { "type": "string", "description": "Phone number digits" },
+        "carrier": { "type": "string", "description": "Carrier targeted or 'broadcast'" },
+        "message": { "type": "string", "description": "Message sent" }
+      },
+      "tags": ["sms", "text", "notify", "message", "communication"],
+      "credentialRef": "gmail_main",
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": ["Email.Send"],
+      "allowedCallers": "any"
+    },
+    "Nexus.Remind": {
+      "n8nId": "RHy9sfuv4eYCcWFk",
+      "description": "Set a delayed reminder that sends an SMS at a specified time or after a delay",
+      "semanticDescription": "Accepts a message and either a delay in minutes or a target ISO datetime. Returns 200 immediately (fire-and-forget via webhook) then waits using n8n's Wait node, and sends the message as an SMS via Nexus.SMS.Send when the time arrives. Call this via HTTP POST to https://n8n.projectnexuscode.org/webhook/remind. Default phone is user's number (262-505-8898). Useful for 'remind me in 45 minutes' or 'alert me at 1:00 PM'.",
+      "input": {
+        "message":       { "type": "string", "required": true,  "description": "Reminder message to send" },
+        "delay_minutes": { "type": "number", "required": false, "description": "Minutes from now to wait (mutually exclusive with target_time)" },
+        "target_time":   { "type": "string", "required": false, "description": "ISO 8601 datetime to fire at (mutually exclusive with delay_minutes)" },
+        "phone":         { "type": "string", "required": false, "description": "Recipient phone number (default: user's number)" }
+      },
+      "output": { "message": { "type": "string", "description": "Workflow was started" } },
+      "webhookUrl": "https://n8n.projectnexuscode.org/webhook/remind",
+      "webhookMethod": "POST",
+      "tags": ["reminder", "schedule", "delay", "sms", "timer", "wake"],
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": ["Nexus.SMS.Send"],
+      "allowedCallers": "any"
+    },
+    "Web.Fetch": {
+      "n8nId": "Rxo8RN4rSosx0QNo",
+      "description": "Fetch a URL and return clean extracted text",
+      "semanticDescription": "Makes an HTTP GET request to any public URL, strips all HTML tags, scripts, and styles, and returns the clean readable text content along with the page title and word count. Use this to read the content of a specific web page when you already have its URL. For finding pages via search, use Web.Search or Web.SearchNews first. Returns up to maxLength characters of text (default 8000).",
+      "input": {
+        "url":       { "type": "string", "required": true,  "description": "Full URL to fetch (must start with http:// or https://)" },
+        "maxLength": { "type": "number", "required": false, "description": "Max characters of text to return (default 8000)" }
+      },
+      "output": {
+        "status":    { "type": "string", "description": "success" },
+        "url":       { "type": "string", "description": "URL fetched" },
+        "title":     { "type": "string", "description": "Page title from <title> tag" },
+        "text":      { "type": "string", "description": "Extracted clean text content" },
+        "wordCount": { "type": "number", "description": "Number of words in extracted text" },
+        "fetchedAt": { "type": "string", "description": "ISO 8601 timestamp" }
+      },
+      "tags": ["web", "fetch", "scrape", "http", "html", "content"],
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Web.Search": {
+      "n8nId": "nETvnAa8IhtssieI",
+      "description": "Search the web via DuckDuckGo and return result titles, snippets, and URLs",
+      "semanticDescription": "Queries DuckDuckGo's HTML search page and parses the result list into structured objects with title, snippet, and URL. Free, no API key required. Good for general web searches. For news-specific queries use Web.SearchNews; for job listings use Web.SearchJobs. Results may vary due to DDG HTML structure changes. Returns up to `limit` results (default 10).",
+      "input": {
+        "query": { "type": "string", "required": true,  "description": "Search query string" },
+        "limit": { "type": "number", "required": false, "description": "Max results to return (default 10)" }
+      },
+      "output": {
+        "status":    { "type": "string", "description": "success" },
+        "query":     { "type": "string", "description": "Original query" },
+        "results":   { "type": "array",  "description": "Array of { title, snippet, url }" },
+        "count":     { "type": "number", "description": "Number of results returned" },
+        "fetchedAt": { "type": "string", "description": "ISO 8601 timestamp" }
+      },
+      "tags": ["web", "search", "duckduckgo", "internet", "query"],
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Web.SearchNews": {
+      "n8nId": "eZtKmzDQyOEd52mY",
+      "description": "Search news articles via Google News RSS",
+      "semanticDescription": "Queries Google News RSS feed for articles matching the search query and returns structured article metadata: title, URL, source, publish date, and a short snippet. Excellent for current events, breaking news, and topic monitoring. Free, no API key required. Results are typically from the last 7 days. Returns up to `limit` articles (default 10).",
+      "input": {
+        "query": { "type": "string", "required": true,  "description": "News search query (e.g. 'AI breakthroughs 2026', 'Wisconsin economy')" },
+        "limit": { "type": "number", "required": false, "description": "Max articles to return (default 10)" }
+      },
+      "output": {
+        "status":    { "type": "string", "description": "success" },
+        "query":     { "type": "string", "description": "Original query" },
+        "articles":  { "type": "array",  "description": "Array of { title, link, source, pubDate, snippet }" },
+        "count":     { "type": "number", "description": "Number of articles returned" },
+        "fetchedAt": { "type": "string", "description": "ISO 8601 timestamp" }
+      },
+      "tags": ["web", "news", "search", "google-news", "rss", "current-events"],
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": [],
+      "allowedCallers": "any"
+    },
+    "Web.SearchJobs": {
+      "n8nId": "q4N1ka1pYIsQM4hA",
+      "description": "Search job listings via Indeed RSS feed",
+      "semanticDescription": "Queries Indeed's RSS job feed for listings matching the query and optional location. Returns job title, link, posting date, and a short description snippet for each result. Free, no API key required. Sorted by date (newest first). Good for finding local or remote positions. Returns up to `limit` jobs (default 15).",
+      "input": {
+        "query":    { "type": "string", "required": true,  "description": "Job search query (e.g. 'software engineer', 'warehouse worker')" },
+        "location": { "type": "string", "required": false, "description": "Location filter (e.g. 'Milwaukee WI', 'Remote')" },
+        "limit":    { "type": "number", "required": false, "description": "Max job listings to return (default 15)" }
+      },
+      "output": {
+        "status":    { "type": "string", "description": "success" },
+        "query":     { "type": "string", "description": "Original job query" },
+        "location":  { "type": "string", "description": "Location filter used" },
+        "jobs":      { "type": "array",  "description": "Array of { title, link, pubDate, snippet }" },
+        "count":     { "type": "number", "description": "Number of jobs returned" },
+        "fetchedAt": { "type": "string", "description": "ISO 8601 timestamp" }
+      },
+      "tags": ["web", "jobs", "indeed", "career", "employment", "search"],
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-19T00:00:00Z",
+      "dependsOn": [],
+      "allowedCallers": "any"
     },
     "Calendar.ListCalendars": {
       "n8nId": null,
