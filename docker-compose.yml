@@ -83,6 +83,10 @@ services:
       # n8n REST API key — used by Nexus.Builder to deploy workflows via internal API
       - N8N_API_KEY=${N8N_API_KEY}
 
+      # GitHub PAT — used by Portfolio.* workflows to commit improved files to repos
+      - GITHUB_PAT=${GITHUB_PAT}
+      - GITHUB_OWNER=Ginkobaloba
+
       # Google OAuth2 Env Vars
       - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
       - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}

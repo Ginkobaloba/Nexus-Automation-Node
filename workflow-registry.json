@@ -953,6 +953,153 @@
       "lastVerified": null,
       "dependsOn": [],
       "allowedCallers": "any"
+    },
+
+    "Portfolio.WriteREADME": {
+      "n8nId": null,
+      "description": "Generate and commit a professional README.md for a GitHub repo using Cortex",
+      "semanticDescription": "Fetches the file structure and key source files from a GitHub repository, sends them to Cortex (Qwen3-Coder-30B) with a prompt to write a professional README.md suitable for a software engineering portfolio, then commits the resulting README to the repo via the GitHub Contents API. Uses GITHUB_PAT env var for authentication and GITHUB_OWNER env var for the account name.",
+      "input": {
+        "repo":   { "type": "string", "required": true,  "description": "GitHub repository name (e.g. 'Draughts')" },
+        "branch": { "type": "string", "required": false, "description": "Branch name (default: main or master)" }
+      },
+      "output": {
+        "success":    { "type": "boolean", "description": "Whether README was committed successfully" },
+        "commitSha":  { "type": "string",  "description": "SHA of the resulting commit" },
+        "commitUrl":  { "type": "string",  "description": "GitHub URL of the commit" },
+        "readmePreview": { "type": "string", "description": "First 500 chars of the generated README" }
+      },
+      "tags": ["portfolio", "github", "readme", "documentation", "cortex"],
+      "credentialRef": null,
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any",
+      "builderHints": {
+        "llmEndpoint": "CORTEX_LLM_URL",
+        "model": "qwen3-coder",
+        "useGitHubApi": true,
+        "githubPatEnvVar": "GITHUB_PAT",
+        "githubOwnerEnvVar": "GITHUB_OWNER",
+        "fileFilters": ["*.md", "*.js", "*.ts", "*.py", "*.cs", "*.java", "*.html", "*.css", "*.json", "*.txt", "*.yaml", "*.yml"],
+        "maxFileSizeBytes": 20000,
+        "maxTotalChars": 40000,
+        "systemPrompt": "You are a senior software engineer writing portfolio documentation. Write a professional, specific, and impressive README.md based on the actual code you see — not generic placeholders. Include: project title, one-line description, features (concrete and specific), tech stack, getting started / build instructions, and author credit (Andrew Mattick, github.com/Ginkobaloba). Output ONLY the README.md markdown content.",
+        "outputFormat": "raw_markdown"
+      }
+    },
+
+    "Portfolio.ImproveFile": {
+      "n8nId": null,
+      "description": "Improve a single source file in a GitHub repo using Cortex and commit the result",
+      "semanticDescription": "Fetches a specific file from a GitHub repository, sends it to Cortex (Qwen3-Coder-30B) with improvement instructions, then commits the rewritten file back to the repo via GitHub Contents API. Handles both creating new files and updating existing ones (fetches current SHA before committing). Improvements include: fixing bugs, modernizing syntax, improving code organization, adding comments, and following best practices for the detected language.",
+      "input": {
+        "repo":     { "type": "string", "required": true,  "description": "GitHub repository name" },
+        "path":     { "type": "string", "required": true,  "description": "File path within the repo (e.g. 'src/App.js')" },
+        "task":     { "type": "string", "required": false, "description": "Specific improvement instructions (e.g. 'fix bugs, modernize to ES6, add JSDoc')" },
+        "branch":   { "type": "string", "required": false, "description": "Branch name (default: main or master)" }
+      },
+      "output": {
+        "success":   { "type": "boolean", "description": "Whether the file was committed successfully" },
+        "commitSha": { "type": "string",  "description": "SHA of the resulting commit" },
+        "commitUrl": { "type": "string",  "description": "GitHub URL of the commit" },
+        "path":      { "type": "string",  "description": "Path of the file that was improved" }
+      },
+      "tags": ["portfolio", "github", "refactor", "improve", "cortex", "code"],
+      "credentialRef": null,
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": [],
+      "allowedCallers": "any",
+      "builderHints": {
+        "llmEndpoint": "CORTEX_LLM_URL",
+        "model": "qwen3-coder",
+        "useGitHubApi": true,
+        "githubPatEnvVar": "GITHUB_PAT",
+        "githubOwnerEnvVar": "GITHUB_OWNER",
+        "systemPrompt": "You are a senior developer improving code for a technical portfolio. Fix bugs, use modern idioms, improve readability, and add helpful comments. Output ONLY the improved file content with no explanation, preamble, or markdown code fences.",
+        "outputFormat": "raw_code",
+        "commitMessageTemplate": "Portfolio improvement: {path} — refactor and modernize"
+      }
+    },
+
+    "Portfolio.ProcessRepo": {
+      "n8nId": null,
+      "description": "Fully improve a GitHub repository for portfolio use: write README, fix bugs, modernize code",
+      "semanticDescription": "Orchestrates a complete portfolio improvement pass over a single GitHub repository. First calls Portfolio.WriteREADME to generate professional documentation. Then fetches the repo file list, filters to significant source files (excluding binaries, build output, and dependencies), and calls Portfolio.ImproveFile on each file up to a configurable limit. Skips files already improved in this session. Returns a summary of all changes made.",
+      "input": {
+        "repo":     { "type": "string", "required": true,  "description": "GitHub repository name" },
+        "branch":   { "type": "string", "required": false, "description": "Branch name (default: auto-detect)" },
+        "maxFiles": { "type": "number", "required": false, "description": "Maximum source files to improve (default: 5)" }
+      },
+      "output": {
+        "repo":            { "type": "string", "description": "Repository name" },
+        "readmeCommit":    { "type": "string", "description": "Commit SHA of the README" },
+        "filesImproved":   { "type": "number", "description": "Count of source files improved" },
+        "commits":         { "type": "array",  "description": "Array of { path, commitSha } for each improved file" },
+        "errors":          { "type": "array",  "description": "Any files that failed with error messages" }
+      },
+      "tags": ["portfolio", "github", "orchestrate", "improve", "cortex"],
+      "credentialRef": null,
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": ["Portfolio.WriteREADME", "Portfolio.ImproveFile"],
+      "allowedCallers": "any",
+      "builderHints": {
+        "skipPatterns": ["node_modules", ".vs", "bin/", "obj/", "dist/", "build/", ".git", "packages/", "kivy_venv/", "*.min.js", "*.map", "*.lock", "package-lock.json"],
+        "priorityExtensions": [".js", ".ts", ".py", ".cs", ".java", ".html", ".css"],
+        "maxFileSizeBytes": 50000
+      }
+    },
+
+    "Portfolio.ProcessAll": {
+      "n8nId": null,
+      "description": "Webhook-triggered workflow that runs Portfolio.ProcessRepo on all configured GitHub repos in sequence",
+      "semanticDescription": "Webhook-triggered (POST /webhook/portfolio-improve-all) entry point for the complete portfolio improvement pipeline. Iterates through a hardcoded list of all target repositories in order from oldest to newest: Draughts, LifeLink, ginkobaloba.github.io, Advent2019, KeywordParser, tic_tac_toe_touchstone_mattick, Checkers_Touchstone_Mattick, ABC_Fitness, ProjectNexus. For each repo, calls Portfolio.ProcessRepo sequentially with a 10-second pause between repos to avoid rate limiting. Returns a full summary of all changes made across all repos.",
+      "input": {
+        "repos":    { "type": "array",  "required": false, "description": "Override repo list (default: all 9 portfolio repos)" },
+        "maxFiles": { "type": "number", "required": false, "description": "Max files to improve per repo (default: 5)" }
+      },
+      "output": {
+        "totalRepos":    { "type": "number", "description": "Number of repos processed" },
+        "totalCommits":  { "type": "number", "description": "Total commits made across all repos" },
+        "results":       { "type": "array",  "description": "Per-repo results from Portfolio.ProcessRepo" },
+        "errors":        { "type": "array",  "description": "Any repos that failed" },
+        "duration":      { "type": "string", "description": "Total wall-clock time" }
+      },
+      "tags": ["portfolio", "github", "batch", "cortex", "automation"],
+      "credentialRef": null,
+      "dangerous": false,
+      "status": "inactive",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": null,
+      "dependsOn": ["Portfolio.ProcessRepo"],
+      "allowedCallers": "any",
+      "builderHints": {
+        "triggerType": "webhook",
+        "webhookPath": "portfolio-improve-all",
+        "responseMode": "onReceived",
+        "defaultRepos": ["Draughts", "LifeLink", "ginkobaloba.github.io", "Advent2019", "KeywordParser", "tic_tac_toe_touchstone_mattick", "Checkers_Touchstone_Mattick", "ABC_Fitness", "ProjectNexus"],
+        "pauseBetweenRepos": 10000
+      }
     }
   }
 }
