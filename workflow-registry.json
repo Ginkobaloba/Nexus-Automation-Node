@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "schemaVersion": 2,
-  "lastUpdated": "2026-02-19T21:00:00Z",
+  "lastUpdated": "2026-02-20T19:47:00Z",
   "nodeWhitelist": [
     "n8n-nodes-base.executeWorkflowTrigger",
     "n8n-nodes-base.set",
@@ -956,7 +956,7 @@
     },
 
     "Portfolio.WriteREADME": {
-      "n8nId": null,
+      "n8nId": "1CU0SxOOBFUObsJa",
       "description": "Generate and commit a professional README.md for a GitHub repo using Cortex",
       "semanticDescription": "Fetches the file structure and key source files from a GitHub repository, sends them to Cortex (Qwen3-Coder-30B) with a prompt to write a professional README.md suitable for a software engineering portfolio, then commits the resulting README to the repo via the GitHub Contents API. Uses GITHUB_PAT env var for authentication and GITHUB_OWNER env var for the account name.",
       "input": {
@@ -972,12 +972,12 @@
       "tags": ["portfolio", "github", "readme", "documentation", "cortex"],
       "credentialRef": null,
       "dangerous": false,
-      "status": "inactive",
+      "status": "active",
       "version": 1,
       "createdBy": "claude-code",
       "nodeHash": null,
       "usageCount": 0,
-      "lastVerified": null,
+      "lastVerified": "2026-02-20T19:47:00Z",
       "dependsOn": [],
       "allowedCallers": "any",
       "builderHints": {
@@ -995,7 +995,7 @@
     },
 
     "Portfolio.ImproveFile": {
-      "n8nId": null,
+      "n8nId": "uWBP1b8jYLNXJpQB",
       "description": "Improve a single source file in a GitHub repo using Cortex and commit the result",
       "semanticDescription": "Fetches a specific file from a GitHub repository, sends it to Cortex (Qwen3-Coder-30B) with improvement instructions, then commits the rewritten file back to the repo via GitHub Contents API. Handles both creating new files and updating existing ones (fetches current SHA before committing). Improvements include: fixing bugs, modernizing syntax, improving code organization, adding comments, and following best practices for the detected language.",
       "input": {
@@ -1013,12 +1013,12 @@
       "tags": ["portfolio", "github", "refactor", "improve", "cortex", "code"],
       "credentialRef": null,
       "dangerous": false,
-      "status": "inactive",
+      "status": "active",
       "version": 1,
       "createdBy": "claude-code",
       "nodeHash": null,
       "usageCount": 0,
-      "lastVerified": null,
+      "lastVerified": "2026-02-20T19:47:00Z",
       "dependsOn": [],
       "allowedCallers": "any",
       "builderHints": {
@@ -1065,6 +1065,34 @@
         "priorityExtensions": [".js", ".ts", ".py", ".cs", ".java", ".html", ".css"],
         "maxFileSizeBytes": 50000
       }
+    },
+
+    "Nexus.Agent": {
+      "n8nId": "MtcY4PBIgCok1nZW",
+      "description": "Conversational AI agent powered by Cortex (Qwen3-Coder-30B) — chat interface to the entire Nexus automation system",
+      "semanticDescription": "The primary user-facing chat interface for Project Nexus. Accepts a natural language message via POST /webhook/nexus-agent, routes it through Cortex (Qwen3-Coder-30B-A3B on the 4090) for intent classification, then either executes the matching sub-workflow (Email.*, Web.*, LLM.*, Nexus.*) or returns a direct conversational response. No Claude API tokens are consumed — all reasoning is handled by the local GPU. Returns { reply, action_taken, result }. Supports sessionId for future conversation memory.",
+      "input": {
+        "message":   { "type": "string", "required": true,  "description": "Natural language request or question" },
+        "sessionId": { "type": "string", "required": false, "description": "Optional session identifier for future conversation context" }
+      },
+      "output": {
+        "reply":        { "type": "string", "description": "Agent's natural language response" },
+        "action_taken": { "type": "string", "description": "Workflow name executed, or 'respond' for conversational replies" },
+        "result":       { "type": "object", "description": "Sub-workflow output if a workflow was executed, otherwise empty object" }
+      },
+      "webhookUrl": "https://n8n.projectnexuscode.org/webhook/nexus-agent",
+      "webhookMethod": "POST",
+      "tags": ["nexus", "agent", "chat", "cortex", "conversational", "entry-point"],
+      "llm": { "model": "qwen3-coder", "endpoint": "http://host.docker.internal:8001", "purpose": "intent classification and response" },
+      "nodeCount": 10,
+      "status": "active",
+      "version": 1,
+      "createdBy": "claude-code",
+      "nodeHash": null,
+      "usageCount": 0,
+      "lastVerified": "2026-02-20T00:00:00Z",
+      "dependsOn": ["Email.Send", "Email.Get", "Email.List", "Email.Search", "Email.Label", "Email.Reply", "Email.Sort", "LLM.Council", "Web.SearchNews", "Web.Search", "Web.Fetch", "Nexus.SMS.Send", "Nexus.Remind", "Nexus.Orchestrator"],
+      "allowedCallers": "any"
     },
 
     "Portfolio.ProcessAll": {
